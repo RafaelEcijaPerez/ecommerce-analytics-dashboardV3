@@ -10,7 +10,7 @@ class Sale(Base):
 
     sale_id = Column(Integer, primary_key=True, index=True)
 
-    date_id = Column(Date, ForeignKey("dim_date.date_id"))
+    date_id = Column(Integer, ForeignKey("dim_date.date_id"))
     customer_id = Column(Integer, ForeignKey("dim_customer.customer_id"))
     product_id = Column(Integer, ForeignKey("dim_product.product_id"))
 

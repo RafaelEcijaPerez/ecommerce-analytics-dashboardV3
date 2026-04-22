@@ -28,6 +28,12 @@ def get_product_by_category(category: str):
     db.close()
     return products
 
+def get_categories():
+    db = SessionLocal()
+    categories = db.query(Product.category).distinct().all()
+    db.close()
+    return [cat[0] for cat in categories]
+
 def get_product_by_price_range(min_price: float, max_price: float):
     db = SessionLocal()
     products = db.query(Product).filter(Product.price >= min_price, Product.price <= max_price).all()

@@ -9,15 +9,19 @@ import {
   CartesianGrid,
 } from "recharts";
 
-export default function SalesChart() {
+interface SalesChartProps {
+  filters?: Record<string, unknown>;
+}
+
+export default function SalesChart({ filters }: SalesChartProps) {
   const [data, setData] = useState([]);
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [filters]);
 
   const loadData = async () => {
-    const res = await getSaleByDate();
+    const res = await getSaleByDate(filters);
     setData(res);
   };
 

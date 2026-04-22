@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.services.sales import get_sales,get_sales_summary ,get_sales_with_details ,get_sale_by_id, get_sales_by_product_id, get_sales_by_date_id, get_sales_by_amount_range, get_sales_by_quantity_range, get_sales_grouped_by_date, create_sale, update_sale, delete_sale
+from app.services.sales import get_sales,get_sales_summary, get_sales_filtered, get_sales_with_details ,get_sale_by_id, get_sales_by_product_id, get_sales_by_date_id, get_sales_by_amount_range, get_sales_by_quantity_range, get_sales_grouped_by_date, create_sale, update_sale, delete_sale
 from app.database import SessionLocal
 
 router = APIRouter(prefix="/sales", tags=["sales"])
@@ -9,16 +9,16 @@ def read_sales():
     return get_sales()
 
 @router.get("/summary")
-def read_sales_summary():
-    return get_sales_summary()
+def read_sales_summary(start_date: str = None, end_date: str = None, category: str = None):
+    return get_sales_summary(start_date, end_date, category)
 
 @router.get("/details")
 def read_sales_with_details():
     return get_sales_with_details()
 
 @router.get("/grouped-by-date")
-def read_sales_grouped_by_date():
-    return get_sales_grouped_by_date()
+def read_sales_grouped_by_date(start_date: str = None, end_date: str = None, category: str = None):
+    return get_sales_grouped_by_date(start_date, end_date, category)
 
 @router.get("/{sale_id}")
 def read_sale_by_id(sale_id: int):
@@ -40,9 +40,14 @@ def read_sales_by_amount_range(min_amount: float, max_amount: float):
 def read_sales_by_quantity_range(min_quantity: int, max_quantity: int):
     return get_sales_by_quantity_range(min_quantity, max_quantity)
 
-@router.get("/summary")
-def read_sales_summary():
-    return get_sales_summary()  
+@router.get("/filtered")
+@router.get("/filtered")
+def get_filtered_sales(
+    start_date: str = None,
+    end_date: str = None,
+    category: str = None
+):
+    return get_sales_filtered(start_date, end_date, category)
 
 @router.post("/create")
 def create_new_sale(product_id: int, date_id: int, quantity: int, total_amount: float):

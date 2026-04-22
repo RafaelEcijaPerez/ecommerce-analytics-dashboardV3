@@ -1,36 +1,31 @@
-import { useEffect, useState } from "react";
-import { getSalesSummary } from "../services/salesServices";
+import { calculateKPIs } from "../utils/kpis";
 
-export default function KPICards() {
-  const [data, setData] = useState<any>(null);
-
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
-    const res = await getSalesSummary();
-    setData(res);
-  };
-
-  if (!data) return <p>Cargando...</p>;
+export default function KPICards({ sales }: any) {
+  const { totalSales, todaySales, topProduct } = calculateKPIs(sales);
 
   return (
-    <div style={{ display: "flex", gap: "20px", marginBottom: "20px" }}>
-      <div>
+    <div style={{ display: "flex", gap: "20px", marginTop: "20px" }}>
+      <div style={cardStyle}>
         <h3>Total Ventas</h3>
-        <p>{data.total_sales}</p>
+        <p>{totalSales.toFixed(2)} €</p>
       </div>
 
-      <div>
-        <h3>Revenue</h3>
-        <p>{data.total_revenue}</p>
+      <div style={cardStyle}>
+        <h3>Ventas Hoy</h3>
+        <p>{todaySales.toFixed(2)} €</p>
       </div>
 
-      <div>
-        <h3>Ticket Medio</h3>
-        <p>{data.avg_ticket}</p>
+      <div style={cardStyle}>
+        <h3>Top Producto</h3>
+        <p>{topProduct}</p>
       </div>
     </div>
   );
 }
+
+const cardStyle = {
+  padding: "20px",
+  border: "1px solid #ccc",
+  borderRadius: "8px",
+  width: "200px",
+};

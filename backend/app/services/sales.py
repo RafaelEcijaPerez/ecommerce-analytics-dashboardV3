@@ -1,7 +1,23 @@
 from app.database import SessionLocal
 from app.models.sale import Sale
+from app.models.date import DateDim
+from app.models.product import Product
 from sqlalchemy import func
 from sqlalchemy.orm import joinedload
+from datetime import date
+
+def apply_filters(query, start_date=None, end_date=None, category=None):
+    if start_date or end_date:
+        query = query.join(DateDim, Sale.date_id == DateDim.date_id)
+        if start_date:
+            start = date.fromisoformat(start_date)
+            query = query.filter(DateDim.date >= start)
+        if end_date:
+            end = date.fromisoformat(end_date)
+            query = query.filter(DateDim.date <= end)
+    if category:
+        query = query.join(Product, Sale.product_id == Product.product_id).filter(Product.category == category)
+    return query
 
 def serialize_sale(sale):
     if not sale:
@@ -29,11 +45,16 @@ def get_sales_with_details():
     db.close()
     return result
 
-def get_sales_summary():
+def get_sales_summary(start_date=None, end_date=None, category=None):
     db = SessionLocal()
-    total_sales = db.query(Sale).count()
-    total_revenue = db.query(func.sum(Sale.total_amount)).scalar()
-    avg_ticket = db.query(func.avg(Sale.total_amount)).scalar()
+    query = db.query(Sale)
+    
+    if start_date or end_date or category:
+        query = apply_filters(query, start_date, end_date, category)
+    
+    total_sales = query.count()
+    total_revenue = query.with_entities(func.sum(Sale.total_amount)).scalar()
+    avg_ticket = query.with_entities(func.avg(Sale.total_amount)).scalar()
     db.close()
     return {
         "total_sales": total_sales,
@@ -77,9 +98,14 @@ def get_sales_by_quantity_range(min_quantity: int, max_quantity: int):
     db.close()
     return result
 
-def get_sales_grouped_by_date():
+def get_sales_grouped_by_date(start_date=None, end_date=None, category=None):
     db = SessionLocal()
-    sales = db.query(Sale).options(joinedload(Sale.product), joinedload(Sale.date), joinedload(Sale.customer)).all()
+    query = db.query(Sale).options(joinedload(Sale.product), joinedload(Sale.date), joinedload(Sale.customer))
+    
+    if start_date or end_date or category:
+        query = apply_filters(query, start_date, end_date, category)
+    
+    sales = query.all()
     
     # Agrupar ventas por fecha
     sales_by_date = {}
@@ -94,17 +120,18 @@ def get_sales_grouped_by_date():
     db.close()
     return result
 
-def get_sales_summary():
+def get_sales_filtered(start_date=None, end_date=None, category=None):
     db = SessionLocal()
-    total_sales = db.query(Sale).count()
-    total_revenue = db.query(func.sum(Sale.total_amount)).scalar()
-    avg_ticket = db.query(func.avg(Sale.total_amount)).scalar()
+
+    query = db.query(Sale).options(joinedload(Sale.product), joinedload(Sale.date), joinedload(Sale.customer))
+    
+    query = apply_filters(query, start_date, end_date, category)
+
+    sales = query.all()
+
     db.close()
-    return {
-        "total_sales": total_sales,
-        "total_revenue": total_revenue,
-        "avg_ticket": avg_ticket
-    }
+    return sales
+
 
 
 def create_sale(product_id: int, date_id: int, quantity: int, total_amount: float):
